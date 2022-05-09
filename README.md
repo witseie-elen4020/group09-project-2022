@@ -23,6 +23,16 @@ In executing the program, the following are worth noting:
 to be tested. hence only up to 500 mb files can be tested and beyond that the execution time takes more that 4 minutes to execute large data csv files of 1MG and above
  
 #parallel program
+In executing the program, the following are worth noting:
+-python v3.10.0 has been used in developing the code
+-The following additional libraries are needed to run the code
+.pandas
+.mpi4py
+.re
+.sys
+.numpy
+.time
+
 as stated this program is not yet complete to perform multiprocessing. this is currently a serial program that is modified to either take two arguments or four arguments
 
 -For two arguments: similar to serial.py file, supply the python script name and the directory of the csv file to compute the box_whisker. the parallel will compute box_whosker 
