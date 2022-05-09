@@ -45,18 +45,17 @@ try:
 
     #check if user doesn't supply two arguments, namely: python script file and the data set type (Accelerometer, Gravity, or Gyroscope) to be executed. An exception is thrown.
     if len(sys.argv) != 2:
-        raise InvalidUserArguments("Invalid user argument, Two argument required: the file script to execute and the data type: Accelerometer, Grvity or Gyroscope")
+        raise InvalidUserArguments("Invalid user argument, Two argument required: the file script to execute and the csv data file directory to execute the box_whisker: ")
 
     #check if correct argument for data set is provided
     #if ((sys.argv[1] != 'Gyroscope') and (sys.argv[1] != 'Accelerometer') and (sys.argv[1] != 'Gravity')):
-     #   raise InvalidUserArguments("Invalid user data set argument typed: insert one of the strings to determine data set type to execute: 'Accelerometer' or 'Gravity' or 'Gyroscope' ")
-                                                                                                                                                                              6,1           Top
+    #   raise InvalidUserArguments("Invalid user data set argument typed: insert one of the strings to determine data set type to execute: 'Accelerometer' or 'Gravity' or 'Gyroscope' ")
 
-#Except:  Here you can handle the error
+     #Except:  Here you can handle the error
 except InvalidUserArguments as e_1:
     print(e_1)
 
-#except InvalidUserArguments as e_2:
+    #except InvalidUserArguments as e_2:
     #print(e_2)
 
 #Else: If there is no exception then this block will be executed
@@ -103,8 +102,7 @@ else:
       box_whisker_values(X, "X")
       box_whisker_values(Y, "Y")
 
-                                                                                                                                                                              99,1          83%
-print("\nTotal time to execute box_and_whisker calculation is %s seconds"% (time.time()-start_time))
+      print("\nTotal time to execute box_and_whisker calculation is %s seconds"% (time.time()-start_time))
 
       #this is the built in function from Pandas to determine the box-and-whisker values to validate if the calculations from the box_whisker_values function are correct
       data.dropna(inplace = True)
@@ -114,3 +112,4 @@ print("\nTotal time to execute box_and_whisker calculation is %s seconds"% (time
 
 #Finally: Finally block always gets executed either exception is generated or not
 #finally:
+
