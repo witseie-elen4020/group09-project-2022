@@ -6,7 +6,7 @@ Only the computational part of the code is timed.
 
 ## Execution Instructions
 In executing the program, the following are worth noting:
--python v2.7.18 has been used in developing the code
+-python v3.10.0 has been used in developing the code
 -The following additional libraries are needed to run the code
 *1* pandas
 *2* re
