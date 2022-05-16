@@ -15,8 +15,13 @@ class  InvalidUserArguments(Exception):
     def _init_(self, message):
         self.message = message
 
+#initialize the communication world
 comm = MPI.COMM_WORLD
+
+#get this particular processes' 'rank' ID
 rank = comm.Get_rank()
+
+#get the size of the communication world
 num_processes = comm.Get_size()
 processor_name = MPI.Get_processor_name()
 
@@ -50,6 +55,15 @@ def box_whisker_values(dataset_array, dataParameter):
 def read_data_set():
       args = str(sys.argv[1])
       args = args.replace("[","")
+      args = args.replace("]","")
+      args = args.replace(",","")
+      args = args.replace("'","")
+
+      #read data in chunks of 1 million rows at a time
+      chunk = read_csv(args, chunksize=1000000)
+      ReadData = concat(chunk)
+      return ReadData
+
 #Try: This block will test the excepted error to occur
 try:
 
@@ -73,63 +87,73 @@ else:
         for i in range(1, userInputs):
             print(sys.argv[i], end = " ")
 
-
+        print("\n\nreading data ", end = " ")
         data = read_data_set()
 
-        #extract the parameters into arrays
-        Z = data['z'].tolist()
-        X = data['x'].tolist()
-        Y = data['y'].tolist()
-        seconds_elapsed = data['seconds_elapsed'].tolist()
-        time_ = data['time'].tolist()
+        if rank == 0:
+            #extract the parameters into arrays
+            Z = data['z'].tolist()
+            X = data['x'].tolist()
+            Y = data['y'].tolist()
+            seconds_elapsed = data['seconds_elapsed'].tolist()
+            time_ = data['time'].tolist()
 
-        #timing calculation of box whisker values for other processes
-        start_time = time.time()
+            #generate array of lists and array of process IDs
+            comm.send(X, dest=1)
+            comm.send(Y, dest=2)
+            comm.send(seconds_elapsed, dest=3)
 
-        box_whisker_values(Z, "Z")
-        box_whisker_values(X, "X")
-        box_whisker_values(Y, "Y")
+            #process for rank 0, execute box_whisker for seconds_elapsed array
 
-        print("\nTotal time to execute box_and_whisker calculation is %s seconds\n\n"% (time.time()-start_time))
+            #start timing computation of box whisker for process 0
+            start_time = MPI.Wtime()
+            box_whisker_values(seconds_elapsed, "Z")
+            end_time = MPI.Wtime()
+            execution_time = end_time - start_time
+            print('')
+
+            #receive timer values from each process and calculate total execution time
+            total_time = execution_time
+            total_time += comm.recv(source = 1)
+            total_time += comm.recv(source = 2)
+            total_time += comm.recv(source =3)
+
+        #timing calcAOAulation of box whisker values for other processes
+        elif rank == 1:
+             receive = comm.recv()
+             start_time = MPI.Wtime()
+             box_whisker_values(receive, "X")
+             end_time = MPI.Wtime()
+             execution_time = end_time - start_time
+             print('')
+             comm.send(execution_time, dest = 0)
+
+        elif rank == 2:
+             receive = comm.recv()
+             start_time = MPI.Wtime()
+             box_whisker_values(receive, "Y")
+             end_time = MPI.Wtime()
+             execution_time = end_time - start_time
+             print('')
+             comm.send(execution_time, dest = 0)
+        elif rank == 3:
+             receive = comm.recv()
+             start_time = MPI.Wtime()
+             box_whisker_values(receive, "seconds_elapsed")
+             end_time = MPI.Wtime()
+             execution_time = end_time - start_time
+             print('')
+             comm.send(execution_time, dest = 0)
 
 
-    elif len(sys.argv) == 4:
-          print("DatasetType file name or directory and time (min & max) range passed as argument: ", end = " ")
-          for i in range(1, userInputs):
-             print(sys.argv[i], end = " ")
+        if rank == 0:
+            print("\nTotal time to execute box_and_whisker calculation is %s seconds\n\n"% total_time)
 
-          data = read_data_set()
-          print("\n\n", data)
-
-          data = read_data_set()
-          print("\n\n", data)
-          #exctract values within the time range specified
-          min_bound = int(sys.argv[2])
-          max_bound = int(sys.argv[3])
-          print("\nminimum time: ", min_bound)
-          print("\nmaximum time: ", max_bound)
-          data = data.loc[(data['time'] > min_bound) & (data['time'] < max_bound)]
-          print("\n\n", data)
-          #extract the parameters into arrays
-          Z = data['z'].tolist()
-          X = data['x'].tolist()
-          Y = data['y'].tolist()
-          seconds_elapsed = data['seconds_elapsed'].tolist()
-
-          #timing calculation of box whisker values for other processes
-          start_time = time.time()
-
-          box_whisker_values(Z, "Z")
-          box_whisker_values(X, "X")
-          box_whisker_values(Y, "Y")
-
-          print("\nTotal time to execute box_and_whisker calculation is %s seconds\n\n"% (time.time()-start_time))
-
-#Finally: Finally block always gets executed either exception is generated or not
 finally:
     #this is the built in function from Pandas to determine the box-and-whisker values to validate if the calculations from the box_whisker_values function are correct
-             data.dropna(inplace = True)
-             print("\n\nThe results from pandas library built-in function to compute box-and-whisker values used to validate the correctness of the calculation:")
-             da = data.describe()
-             print("\n\n",da, end = "\n\n")
+          if rank == 0:
 
+              data.dropna(inplace = True)
+              print("\n\nThe results from pandas library built-in function to compute box-and-whisker values used to validate the correctness of the calculation:")
+              da = data.describe()
+              print("\n\n",da, end = "\n\n")
